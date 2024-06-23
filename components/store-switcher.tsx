@@ -9,15 +9,18 @@ import { useParams, useRouter } from "next/navigation";
 import { Button }  from "./ui/button";
 import { cn } from "@/lib/utils";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "./ui/command";
+import { info } from "console";
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
+
+
 
 interface StoreSwitcherProps extends PopoverTriggerProps {
     items: Store[];
 }
 export default function StoreSwitcher({
     className,
-    items = []
+    items = [],
 }: StoreSwitcherProps) {
     const storeModal = useStoreModal();
     const params = useParams();
@@ -25,10 +28,12 @@ export default function StoreSwitcher({
 
     const formattedItems = items.map((item) => ({
         label: item.name,
-        value: item.id
+        value: item.id,
     }));
 
-    const currentStore = formattedItems.find((item) => item.value === params.storeId)
+    const currentStore = formattedItems.find((item) => item.value === params.storeId);
+
+
 
     const [open, setOpen] = useState(false);
 
@@ -36,6 +41,9 @@ export default function StoreSwitcher({
         setOpen(true);
         router.push(`/${store.value}`)
     }
+
+
+
     return (
         <Popover onOpenChange={setOpen}>
             <PopoverTrigger asChild>

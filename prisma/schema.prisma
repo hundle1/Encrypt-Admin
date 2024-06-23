@@ -9,17 +9,18 @@ generator client {
 }
 
 model Store {
-  id         String      @id @default(uuid())
-  name       String
-  userId     String
-  billboards Billboard[] @relation("StoreToBillboard")
-  categories Category[]  @relation("StoreToCategory")
-  products   Product[]   @relation("StoreToProduct")
-  sizes      Size[]      @relation("StoreToSize")
-  colors     Color[]     @relation("StoreToColor")
-  orders     Order[]     @relation("StoreToOrder")
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id            String      @id @default(uuid())
+  name          String
+  userId        String
+  walletAddress String
+  billboards    Billboard[] @relation("StoreToBillboard")
+  categories    Category[]  @relation("StoreToCategory")
+  products      Product[]   @relation("StoreToProduct")
+  sizes         Size[]      @relation("StoreToSize")
+  colors        Color[]     @relation("StoreToColor")
+  orders        Order[]     @relation("StoreToOrder")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model Billboard {

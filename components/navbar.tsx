@@ -1,12 +1,9 @@
 import React from 'react'
-import { UserButton, auth } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs';
 import { MainNav } from '@/components/main-nav';
 import StoreSwitcher from '@/components/store-switcher';
 import { redirect } from 'next/navigation'
 import prismadb from '@/lib/prismadb';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { Button } from './ui/button';
-import { WalletMinimal } from 'lucide-react';
 import { PrismaClient } from '@prisma/client';
 
 
@@ -27,22 +24,10 @@ const Navbar = async () => {
   })
 
   return (
-    <div className='border-b'>
-      <div className='flex items-center h-16 px-4'>
-        <StoreSwitcher items={stores} />
-        <MainNav className='mx-6' />
-        <div className='flex items-center ml-auto space-x-4'>
-          {posts.map((post) => (
-            <Button key={post.id} className='flex items-center px-4 py-2 bg-neutral-400 rounded-xl'>
-              <WalletMinimal size={20} color='white' />
-              <span className='ml-2 text-sm font-medium text-white'>
-                {post.walletAddress}
-              </span>
-            </Button>
-          ))}
-          <ThemeToggle />
-          <UserButton afterSignOutUrl='/' />
-        </div>
+    <div className='w-[17%] h-full'>
+      <div className='flex flex-col items-center h-24 p-4 pt-4'>
+        <StoreSwitcher items={stores} className='p-4'/>
+        <MainNav className='mx-0 flex flex-col' />
       </div>
     </div>
   )

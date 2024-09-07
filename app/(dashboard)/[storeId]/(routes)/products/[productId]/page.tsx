@@ -7,7 +7,8 @@ const ProductPage = async ({ params }: { params: { productId: string, storeId: s
             id: params.productId
         },
         include: {
-            images: true
+            images: true,
+            files: true
         }
     });
 
@@ -17,13 +18,13 @@ const ProductPage = async ({ params }: { params: { productId: string, storeId: s
         },
     })
 
-    const sizes = await prismadb.size.findMany({
+    const types = await prismadb.type.findMany({
         where: {
             storeId: params.storeId
         },
     })
 
-    const colors = await prismadb.color.findMany({
+    const creators = await prismadb.creator.findMany({
         where: {
             storeId: params.storeId
         },
@@ -34,8 +35,8 @@ const ProductPage = async ({ params }: { params: { productId: string, storeId: s
             <div className="flex-1 p-8 pt-6 space-y-4">
                 <ProductForm
                     initialData={product}
-                    colors={colors}
-                    sizes={sizes}
+                    creators={creators}
+                    types={types}
                     categories={categories}
                 />
             </div>

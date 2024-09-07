@@ -14,8 +14,8 @@ export async function POST(
             name,
             price,
             categoryId,
-            colorId,
-            sizeId,
+            creatorId,
+            typeId,
             images,
             isFeatured,
             isArchived
@@ -33,9 +33,9 @@ export async function POST(
 
         if (!categoryId) new NextResponse("Category id is required", { status: 400});
 
-        if (!colorId) new NextResponse("Color id is required", { status: 400});
+        if (!creatorId) new NextResponse("Color id is required", { status: 400});
 
-        if (!sizeId) new NextResponse("Size id is required", { status: 400});
+        if (!typeId) new NextResponse("Size id is required", { status: 400});
 
         if (!isFeatured) new NextResponse("Featured is required", { status: 400});
 
@@ -74,8 +74,8 @@ export async function POST(
                 isFeatured,
                 isArchived,
                 categoryId,
-                sizeId,
-                colorId,
+                typeId,
+                creatorId,
                 storeId: params.storeId
             }
         })
@@ -95,8 +95,8 @@ export async function GET(
     try {
         const { searchParams } = new URL(req.url);
         const categoryId = searchParams.get('categoryId') || undefined;
-        const sizeId = searchParams.get('sizeId') || undefined;
-        const colorId = searchParams.get('colorId') || undefined;
+        const typeId = searchParams.get('typeId') || undefined;
+        const creatorId = searchParams.get('creatorId') || undefined;
         const isFeatured = searchParams.get('isFeatured');
 
         if (!params.storeId) {
@@ -107,16 +107,16 @@ export async function GET(
             where: {
                 storeId: params.storeId,
                 categoryId,
-                colorId,
-                sizeId,
+                creatorId,
+                typeId,
                 isFeatured: isFeatured ? true : undefined,
                 isArchived: false
             },
             include: {
                 images: true,
                 category: true,
-                color: true,
-                size: true
+                creator: true,
+                type: true
             },
             orderBy: {
                 createdAt: 'desc'

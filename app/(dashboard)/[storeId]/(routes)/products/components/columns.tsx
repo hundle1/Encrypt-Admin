@@ -6,22 +6,27 @@ export type ProductColumn = {
     id: string
     name: string
     price: string
-    size: string
+    type: string
+    image: string
     category: string
-    color: string
+    creator: string
     isFeatured: boolean
-    isArchived: boolean
     createdAt: string
 }
 
 export const columns: ColumnDef<ProductColumn>[] = [
     {
-        accessorKey: 'name',
-        header: 'Name',
+        accessorKey: 'image',
+        header: 'Image',
+        cell: ({ row }) => (
+            <div className='flex items-center gap-x-2'>
+                <img src={row.original.image} className='w-32 h-32 rounded-xl object-scale-down border border-gray-400' />
+            </div>
+        )
     },
     {
-        accessorKey: 'isArchived',
-        header: 'Archived',
+        accessorKey: 'name',
+        header: 'Name',
     },
     {
         accessorKey: 'isFeatured',
@@ -36,18 +41,12 @@ export const columns: ColumnDef<ProductColumn>[] = [
         header: 'Category',
     },
     {
-        accessorKey: 'size',
-        header: 'Size',
+        accessorKey: 'type',
+        header: 'Type',
     },
     {
-        accessorKey: 'color',
-        header: 'Color',
-        cell: ({ row }) => (
-            <div className='flex items-center gap-x-2'>
-                {row.original.color}
-                <div className='w-6 h-6 border rounded-full' style={{ backgroundColor: row.original.color }} />
-            </div>
-        )
+        accessorKey: 'creator',
+        header: 'Creator',
     },
     {
         accessorKey: 'createdAt',

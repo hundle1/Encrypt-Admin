@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import * as z from 'zod'
-import { Category, Color, Image, Product, Size } from "@prisma/client";
+import { Category, Creator, Image, Product, Type, File } from "@prisma/client";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -18,14 +18,16 @@ import { AlertModal } from '@/components/modals/alert-modal';
 import ImageUpload from '@/components/ui/image-upload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MultiFileDropzone } from '@/components/multifiledropzone';
 
 interface ProductFromProps {
     initialData: Product & {
-        images: Image[]
+        images: Image[],
+        files: File[]
     } | null;
     categories: Category[]
-    colors: Color[]
-    sizes: Size[]
+    creators: Creator[]
+    types: Type[]
 }
 
 const formSchema = z.object({
@@ -33,8 +35,8 @@ const formSchema = z.object({
     images: z.object({ url: z.string() }).array(),
     price: z.coerce.number().min(1),
     categoryId: z.string().min(1),
-    colorId: z.string().min(1),
-    sizeId: z.string().min(1),
+    creatorId: z.string().min(1),
+    typeId: z.string().min(1),
     isFeatured: z.boolean().default(false).optional(),
     isArchived: z.boolean().default(false).optional()
     
@@ -45,8 +47,8 @@ type ProductFormValues = z.infer<typeof formSchema>;
 export const ProductForm: React.FC<ProductFromProps> = ({
     initialData,
     categories,
-    colors,
-    sizes
+    creators,
+    types
 }) => {
 
     const params = useParams();
@@ -64,14 +66,14 @@ export const ProductForm: React.FC<ProductFromProps> = ({
         resolver: zodResolver(formSchema),
         defaultValues: initialData ? {
             ...initialData,
-            price: parseFloat(String(initialData?.price))
+            price: parseFloat(String(initialData?.price)),
         } : {
             name: '',
             images: [],
             price: 0,
             categoryId: '',
-            colorId: '',
-            sizeId: '',
+            creatorId: '',
+            typeId: '',
             isFeatured: false,
             isArchived: false,
         }
@@ -110,6 +112,10 @@ export const ProductForm: React.FC<ProductFromProps> = ({
         }
     }
 
+    function setFileStates(files: import("@/components/multifiledropzone").String[]) {
+        throw new Error('Function not implemented.');
+    }
+
     return (
         <>
             <AlertModal
@@ -134,7 +140,7 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                         name="images"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel>Background Image</FormLabel>
+                                <FormLabel>NFS Present Image</FormLabel>
                                 <FormControl>
                                     <ImageUpload
                                         value={field.value.map((image) => image.url)}
@@ -147,6 +153,7 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             </FormItem>
                         )}
                     />
+                    <MultiFileDropzone></MultiFileDropzone>
                     <div className='grid grid-cols-3 gap-8'>
                         <FormField
                             control={form.control} 
@@ -208,10 +215,10 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                         />
                         <FormField
                             control={form.control} 
-                            name="sizeId"
+                            name="typeId"
                             render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>Size</FormLabel>
+                                    <FormLabel>Type</FormLabel>
                                     <Select
                                         disabled={loading}
                                         onValueChange={field.onChange}
@@ -222,14 +229,14 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                                             <SelectTrigger>
                                                 <SelectValue
                                                     defaultValue={field.value}
-                                                    placeholder='Select a size'
+                                                    placeholder='Select Type Of Product'
                                                 />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {sizes.map(size => (
-                                                <SelectItem key={size.id} value={size.id}>
-                                                    {size.name}
+                                            {types.map(type => (
+                                                <SelectItem key={type.id} value={type.id}>
+                                                    {type.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -240,10 +247,10 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                         />
                         <FormField
                             control={form.control} 
-                            name="colorId"
+                            name="creatorId"
                             render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>Color</FormLabel>
+                                    <FormLabel>Type</FormLabel>
                                     <Select
                                         disabled={loading}
                                         onValueChange={field.onChange}
@@ -254,14 +261,14 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                                             <SelectTrigger>
                                                 <SelectValue
                                                     defaultValue={field.value}
-                                                    placeholder='Select a color'
+                                                    placeholder='Select Creator Name'
                                                 />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {colors.map(color => (
-                                                <SelectItem style={{ display: 'flex' }} key={color.id} value={color.id}>
-                                                    <span style={{ color: color.value }}>{color.name}</span>
+                                            {creators.map(creator => (
+                                                <SelectItem key={creator.id} value={creator.id}>
+                                                    {creator.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

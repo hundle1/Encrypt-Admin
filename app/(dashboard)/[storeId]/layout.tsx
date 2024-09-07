@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation"
 import prismadb from "@/lib/prismadb";
 import Navbar from "@/components/navbar";
+import { Header } from "@/components/header";
 
 interface DashboardType {
     children: React.ReactNode;
@@ -27,9 +28,12 @@ export default async function Dashboard({children, params}: DashboardType) {
     }
 
     return (
-        <>
-            <Navbar/>
-            {children}
-        </>
+            <div className="h-screen flex flex-row ">
+                <Navbar/>
+                <div className="w-full border-l">
+                    <Header/>
+                    {children}
+                </div>
+            </div>
     )
 }

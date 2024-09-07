@@ -14,7 +14,6 @@ import { toast } from 'react-hot-toast'
 
 const formSchema = z.object({
     name: z.string().min(1),
-    walletAddress: z.string().min(1)
 })
 export const StoreModal = () => {
     const [loading, setLoading] = useState(false)
@@ -22,7 +21,6 @@ export const StoreModal = () => {
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
-            walletAddress: ""
         }
     })
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -62,24 +60,6 @@ export const StoreModal = () => {
                                             <Input
                                                 disabled={loading}
                                                 placeholder='E-commerce name'
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <div className='pt-5'></div>
-                            <FormField
-                                control={control}
-                                name="walletAddress"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>walletAddress</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                disabled={loading}
-                                                placeholder='Input your wallet address'
                                                 {...field}
                                             />
                                         </FormControl>

@@ -5,6 +5,7 @@ import { CellAction } from './cell-action';
 export type BillboardColumn = {
     id: string
     label: string
+    imageUrl:   string
     createdAt: string
 }
 
@@ -12,6 +13,11 @@ export const columns: ColumnDef<BillboardColumn>[] = [
     {
         accessorKey: 'label',
         header: 'Label',
+    },
+    {
+        accessorKey: '  imageUrl',
+        header: 'Image',
+        cell: ({ row }) => <img className="w-20 h-20 object-cover" src={String(row.original.imageUrl)} />
     },
     {
         accessorKey: 'createdAt',

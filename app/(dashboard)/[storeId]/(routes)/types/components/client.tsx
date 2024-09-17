@@ -24,7 +24,7 @@ export const TypeClient: React.FC<TypeClientProps> = ({
             <div className="flex items-center justify-between">
                 <Heading
                     title={`Types (${data?.length})`}
-                    description="Manage types for your store"/>
+                    description="Manage types for your store" />
                 <Button onClick={() => router.push(`/${params.storeId}/types/new`)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add New
@@ -32,9 +32,9 @@ export const TypeClient: React.FC<TypeClientProps> = ({
             </div>
             <Separator />
             <DataTable columns={columns} data={data} searchKey="name" />
-            <Heading title="API" description="API calls for Types" />
+            {/* <Heading title="API" description="API calls for Types" /> */}
             <Separator />
-            <ApiList entityName="types" entityIdName="typeId" />
+            {/* <ApiList entityName="types" entityIdName="typeId" /> */}
         </>
     )
 }

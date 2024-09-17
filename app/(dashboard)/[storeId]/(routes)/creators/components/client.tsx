@@ -24,7 +24,7 @@ export const CreatorClient: React.FC<CreatorClientProps> = ({
             <div className="flex items-center justify-between">
                 <Heading
                     title={`Meta data information(${data?.length})`}
-                    description="Entering your name for the Ownership"/>
+                    description="Entering your name for the Ownership" />
                 <Button onClick={() => router.push(`/${params.storeId}/creators/new`)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add New
@@ -32,9 +32,9 @@ export const CreatorClient: React.FC<CreatorClientProps> = ({
             </div>
             <Separator />
             <DataTable columns={columns} data={data} searchKey="name" />
-            <Heading title="API" description="API calls for creators" />
+            {/* <Heading title="API" description="API calls for creators" /> */}
             <Separator />
-            <ApiList entityName="creators" entityIdName="creatorId" />
+            {/* <ApiList entityName="creators" entityIdName="creatorId" /> */}
         </>
     )
 }

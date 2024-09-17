@@ -18,11 +18,11 @@ export const columns: ColumnDef<OrderColumn>[] = [
     },
     {
         accessorKey: 'phone',
-        header: 'Phone',
+        header: 'Email Address',
     },
     {
         accessorKey: 'address',
-        header: 'Address',
+        header: 'Wallet Address',
     },
     {
         accessorKey: 'totalPrice',

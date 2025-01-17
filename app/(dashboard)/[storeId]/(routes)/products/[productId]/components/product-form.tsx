@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import * as z from 'zod'
-import { Category, Creator, Image, Product, Type, File } from "@prisma/client";
+import { Category, Creator, Image, Product, Type } from "@prisma/client";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -18,12 +18,15 @@ import { AlertModal } from '@/components/modals/alert-modal';
 import ImageUpload from '@/components/ui/image-upload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { MultiFileDropzone } from '@/components/multifiledropzone';
+// import { MultiFileDropzone } from '@/components/multifiledropzone';
+import { NFSDropZone } from '@/components/dropzone';
+import { describe } from 'node:test';
+import MultiFileDropzone from '@/components/multifiledropzone';
+import InputHash from '@/components/inputhash';
 
 interface ProductFromProps {
     initialData: Product & {
         images: Image[],
-        files: File[]
     } | null;
     categories: Category[]
     creators: Creator[]
@@ -34,12 +37,14 @@ const formSchema = z.object({
     name: z.string().min(1),
     images: z.object({ url: z.string() }).array(),
     price: z.coerce.number().min(1),
+    hashID: z.coerce.string().min(1),
+    describe: z.string().min(1),
     categoryId: z.string().min(1),
     creatorId: z.string().min(1),
     typeId: z.string().min(1),
     isFeatured: z.boolean().default(false).optional(),
     isArchived: z.boolean().default(false).optional()
-    
+
 })
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -71,6 +76,8 @@ export const ProductForm: React.FC<ProductFromProps> = ({
             name: '',
             images: [],
             price: 0,
+            hashID: '',
+            describe: '',
             categoryId: '',
             creatorId: '',
             typeId: '',
@@ -90,7 +97,7 @@ export const ProductForm: React.FC<ProductFromProps> = ({
             router.refresh();
             router.push(`/${params.storeId}/products`);
             toast.success(toastMessage)
-        } catch(err) {
+        } catch (err) {
             toast.error("Something went wrong.");
         } finally {
             setLoading(false)
@@ -104,16 +111,12 @@ export const ProductForm: React.FC<ProductFromProps> = ({
             router.refresh();
             router.push(`/${params.storeId}/products`)
             toast.success("Product deleted.")
-        } catch(err) {
+        } catch (err) {
             toast.error("Something Went Wrong.");
         } finally {
             setLoading(false)
             setOpen(false);
         }
-    }
-
-    function setFileStates(files: import("@/components/multifiledropzone").String[]) {
-        throw new Error('Function not implemented.');
     }
 
     return (
@@ -136,9 +139,9 @@ export const ProductForm: React.FC<ProductFromProps> = ({
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
                     <FormField
-                        control={form.control} 
+                        control={form.control}
                         name="images"
-                        render={({field}) => (
+                        render={({ field }) => (
                             <FormItem>
                                 <FormLabel>NFS Present Image</FormLabel>
                                 <FormControl>
@@ -153,12 +156,24 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             </FormItem>
                         )}
                     />
-                    <MultiFileDropzone></MultiFileDropzone>
+                    <FormField
+                        control={form.control}
+                        name="hashID"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Enter Hash ID from Pinata</FormLabel>
+                                <FormControl>
+                                    <Input disabled={loading} placeholder='Product Hash ID' {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <div className='grid grid-cols-3 gap-8'>
                         <FormField
-                            control={form.control} 
+                            control={form.control}
                             name="name"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Name</FormLabel>
                                     <FormControl>
@@ -169,9 +184,9 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             )}
                         />
                         <FormField
-                            control={form.control} 
+                            control={form.control}
                             name="price"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Price</FormLabel>
                                     <FormControl>
@@ -182,9 +197,9 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             )}
                         />
                         <FormField
-                            control={form.control} 
+                            control={form.control}
                             name="categoryId"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Category</FormLabel>
                                     <Select
@@ -214,9 +229,9 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             )}
                         />
                         <FormField
-                            control={form.control} 
+                            control={form.control}
                             name="typeId"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Type</FormLabel>
                                     <Select
@@ -246,11 +261,11 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             )}
                         />
                         <FormField
-                            control={form.control} 
+                            control={form.control}
                             name="creatorId"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Type</FormLabel>
+                                    <FormLabel>Creator</FormLabel>
                                     <Select
                                         disabled={loading}
                                         onValueChange={field.onChange}
@@ -278,9 +293,22 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             )}
                         />
                         <FormField
-                            control={form.control} 
+                            control={form.control}
+                            name="describe"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Discribes this product</FormLabel>
+                                    <FormControl>
+                                        <Input type='textarea' disabled={loading} placeholder='Product describe' {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
                             name="isFeatured"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem className='flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md'>
                                     <FormControl>
                                         <Checkbox
@@ -301,9 +329,9 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                             )}
                         />
                         <FormField
-                            control={form.control} 
+                            control={form.control}
                             name="isArchived"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem className='flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md'>
                                     <FormControl>
                                         <Checkbox

@@ -44,6 +44,8 @@ export async function PATCH (
             categoryId,
             creatorId,
             typeId,
+            hashID,
+            describe,
             images,
             isFeatured,
             isArchived
@@ -58,6 +60,10 @@ export async function PATCH (
         }
 
         if (!price) new NextResponse("Price is required", { status: 400});
+
+        if (!describe) new NextResponse("Describe is required", { status: 400});
+
+        if (!hashID) new NextResponse("HashID is required", { status: 400});
 
         if (!categoryId) new NextResponse("Category id is required", { status: 400});
 
@@ -98,6 +104,8 @@ export async function PATCH (
                     deleteMany: {}
                 },
                 price,
+                describe,
+                hashID,
                 isFeatured,
                 isArchived,
                 categoryId,

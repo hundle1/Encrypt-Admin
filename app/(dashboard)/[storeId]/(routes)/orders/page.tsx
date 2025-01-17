@@ -4,9 +4,9 @@ import { OrderClient } from './components/client'
 import { OrderColumn } from './components/columns'
 import { formatter } from '@/lib/utils'
 
-const OrdersPage = async ({ 
+const OrdersPage = async ({
     params
-}: { 
+}: {
     params: { storeId: string }
 }) => {
 
@@ -17,7 +17,8 @@ const OrdersPage = async ({
         include: {
             orderItems: {
                 include: {
-                    product: true
+                    product: true,
+                    order: true
                 }
             }
         },

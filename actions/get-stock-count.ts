@@ -7,6 +7,6 @@ export const getStockCount = async (storeId: string) => {
             isArchived: true,
         }
     });
-
+    
     return salesCount;
 }

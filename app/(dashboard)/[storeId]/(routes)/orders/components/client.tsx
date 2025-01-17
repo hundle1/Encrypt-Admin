@@ -2,7 +2,6 @@
 
 import { Heading } from "@/components/ui/heading"
 import { Separator } from "@/components/ui/separator"
-// import { Billboard } from "@prisma/client"
 import { useParams, useRouter } from "next/navigation"
 import { OrderColumn, columns } from "./columns"
 import { DataTable } from "@/components/ui/data-table"
@@ -20,7 +19,7 @@ export const OrderClient: React.FC<OrderClientProps> = ({
         <>
             <Heading
                 title={`Order (${data?.length})`}
-                description="Manage orders for your store"/>
+                description="Manage orders for your store" />
             <Separator />
             <DataTable columns={columns} data={data} searchKey="products" />
         </>

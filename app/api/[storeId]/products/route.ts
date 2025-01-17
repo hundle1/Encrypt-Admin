@@ -16,6 +16,8 @@ export async function POST(
             categoryId,
             creatorId,
             typeId,
+            describe,
+            hashID,
             images,
             isFeatured,
             isArchived
@@ -30,6 +32,10 @@ export async function POST(
         }
 
         if (!price) new NextResponse("Price is required", { status: 400});
+
+        if (!describe) new NextResponse("Describe is required", { status: 400});
+
+        if (!hashID) new NextResponse("HashID is required", { status: 400});
 
         if (!categoryId) new NextResponse("Category id is required", { status: 400});
 
@@ -71,6 +77,8 @@ export async function POST(
                     }
                 },
                 price,
+                describe,
+                hashID,
                 isFeatured,
                 isArchived,
                 categoryId,

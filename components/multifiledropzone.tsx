@@ -1,236 +1,75 @@
-'use client';
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import axios from 'axios';
 
-import { formatFileSize } from '@edgestore/react/utils';
-import {
-  CheckCircleIcon,
-  FileIcon,
-  LucideFileWarning,
-  Trash2Icon,
-  UploadCloudIcon,
-  XIcon,
-} from 'lucide-react';
-import * as React from 'react';
-import { useDropzone, type DropzoneOptions } from 'react-dropzone';
-import { twMerge } from 'tailwind-merge';
+interface MultiFileDropzoneProps {
+    value: any;
+    onChange: (files: any[]) => void;
+    disabled?: boolean;
+}
 
-const variants = {
-  base: 'relative rounded-md p-4 w-full flex justify-center items-center flex-col cursor-pointer border border-dashed border-gray-400 dark:border-gray-300 transition-colors duration-200 ease-in-out',
-  active: 'border-2',
-  disabled:
-    'bg-gray-200 border-gray-300 cursor-default pointer-events-none bg-opacity-30 dark:bg-gray-700 dark:border-gray-600',
-  accept: 'border border-blue-500 bg-blue-500 bg-opacity-10',
-  reject: 'border border-red-700 bg-red-700 bg-opacity-10',
-};
+const MultiFileDropzone: React.FC<MultiFileDropzoneProps> = ({ value, onChange, disabled }) => {
+    const [uploading, setUploading] = useState(false);
+    const [pinataHash, setPinataHash] = useState('');
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-export type String = {
-  file: File;
-  key: string; // used to identify the file in the progress callback
-  progress: 'PENDING' | 'COMPLETE' | 'ERROR' | number;
-  abortController?: AbortController;
-};
+    const onDrop = useCallback(async (acceptedFiles: File[]) => {
+        if (disabled || uploading) return;
 
-type InputProps = {
-  className?: string;
-  value?: String[];
-  onChange?: (files: String[]) => void | Promise<void>;
-  onFilesAdded?: (addedFiles: String[]) => void | Promise<void>;
-  disabled?: boolean;
-  dropzoneOptions?: Omit<DropzoneOptions, 'disabled'>;
-};
+        setUploading(true);
+        setSelectedFiles(acceptedFiles);
 
-const ERROR_MESSAGES = {
-  fileTooLarge(maxSize: number) {
-    return `The file is too large. Max size is ${formatFileSize(maxSize)}.`;
-  },
-  fileInvalidType() {
-    return 'Invalid file type.';
-  },
-  tooManyFiles(maxFiles: number) {
-    return `You can only add ${maxFiles} file(s).`;
-  },
-  fileNotSupported() {
-    return 'The file is not supported.';
-  },
-};
+        try {
+            const formData = new FormData();
+            acceptedFiles.forEach((file) => formData.append('file', file));
 
-const MultiFileDropzone = React.forwardRef<HTMLInputElement, InputProps>(
-  (
-    { dropzoneOptions, value, className, disabled, onFilesAdded, onChange },
-    ref,
-  ) => {
-    const [customError, setCustomError] = React.useState<string>();
-    if (dropzoneOptions?.maxFiles && value?.length) {
-      disabled = disabled ?? value.length >= dropzoneOptions.maxFiles;
-    }
-    // dropzone configuration
-    const {
-      getRootProps,
-      getInputProps,
-      fileRejections,
-      isFocused,
-      isDragAccept,
-      isDragReject,
-    } = useDropzone({
-      disabled,
-      onDrop: (acceptedFiles) => {
-        const files = acceptedFiles;
-        setCustomError(undefined);
-        if (
-          dropzoneOptions?.maxFiles &&
-          (value?.length ?? 0) + files.length > dropzoneOptions.maxFiles
-        ) {
-          setCustomError(ERROR_MESSAGES.tooManyFiles(dropzoneOptions.maxFiles));
-          return;
+            // Gửi yêu cầu lên Pinata
+            const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
+                headers: {
+                    'Authorization': `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI3NGRkZWU0OS0wZGRiLTQxMzEtOWU1Mi0wYmM1NjI0MTVhNGYiLCJlbWFpbCI6InRyZXhiYWlyb25nQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiIxNDI5YzVlZGNlMGUwODQyOWRmOCIsInNjb3BlZEtleVNlY3JldCI6IjVmNjIyYjNlNmYxZDE4ZWY4YmQyNzkyYTcyNzJiMjY3MTg5ODRkNzk3NWM1YThjZmQ1YTFjZjBiOTY4MzA3YzMiLCJleHAiOjE3NTgzNzU4NjR9.gONoK50bCrR79fz0UYmNE5w_x6C1B2SjXsKw8tn2WpY`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            if (response.data && response.data.IpfsHash) {
+                setPinataHash(response.data.IpfsHash);
+                if (onChange) {
+                    onChange(response.data.IpfsHash);
+                }
+            } else {
+                console.error('Failed to upload to Pinata');
+            }
+        } catch (error) {
+            console.error('Error uploading files:', error);
+        } finally {
+            setUploading(false);
         }
-        if (files) {
-          const addedFiles = files.map<String>((file) => ({
-            file,
-            key: Math.random().toString(36).slice(2),
-            progress: 'PENDING',
-          }));
-          void onFilesAdded?.(addedFiles);
-          void onChange?.([...(value ?? []), ...addedFiles]);
-        }
-      },
-      ...dropzoneOptions,
+    }, [disabled, uploading, onChange]);
+
+    const { getRootProps, getInputProps } = useDropzone({
+        onDrop,
+        multiple: true,
     });
 
-    // styling
-    const dropZoneClassName = React.useMemo(
-      () =>
-        twMerge(
-          variants.base,
-          isFocused && variants.active,
-          disabled && variants.disabled,
-          (isDragReject ?? fileRejections[0]) && variants.reject,
-          isDragAccept && variants.accept,
-          className,
-        ).trim(),
-      [
-        isFocused,
-        fileRejections,
-        isDragAccept,
-        isDragReject,
-        disabled,
-        className,
-      ],
-    );
-
-    // error validation messages
-    const errorMessage = React.useMemo(() => {
-      if (fileRejections[0]) {
-        const { errors } = fileRejections[0];
-        if (errors[0]?.code === 'file-too-large') {
-          return ERROR_MESSAGES.fileTooLarge(dropzoneOptions?.maxSize ?? 0);
-        } else if (errors[0]?.code === 'file-invalid-type') {
-          return ERROR_MESSAGES.fileInvalidType();
-        } else if (errors[0]?.code === 'too-many-files') {
-          return ERROR_MESSAGES.tooManyFiles(dropzoneOptions?.maxFiles ?? 0);
-        } else {
-          return ERROR_MESSAGES.fileNotSupported();
-        }
-      }
-      return undefined;
-    }, [fileRejections, dropzoneOptions]);
-
     return (
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-2">
-          <div className="w-full">
-            {/* Main File Input */}
-            <div
-              {...getRootProps({
-                className: dropZoneClassName,
-              })}
-            >
-              <input ref={ref} {...getInputProps()} />
-              <div className="flex flex-col items-center justify-center text-xs text-gray-400">
-                <UploadCloudIcon className="mb-1 h-7 w-7" />
-                <div className="text-gray-400">
-                  drag & drop or click to upload
-                </div>
-              </div>
-            </div>
+        <div {...getRootProps()} className={`border-dashed border-2 p-4 rounded ${disabled ? 'opacity-50' : ''}`}>
+            <input {...getInputProps()} disabled={disabled || uploading} />
+            <p>{uploading ? 'Uploading...' : 'Drag & drop a folder here, or click to select files'}</p>
 
-            {/* Error Text */}
-            <div className="mt-1 text-xs text-red-500">
-              {customError ?? errorMessage}
-            </div>
-          </div>
+            {selectedFiles.length > 0 && (
+                <div>
+                    <h4>Selected Files:</h4>
+                    <ul>
+                        {selectedFiles.map((file, index) => (
+                            <li key={index}>{file.name}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
-          {/* Selected Files */}
-          {value?.map(({ file, abortController, progress }, i) => (
-            <div
-              key={i}
-              className="flex h-16 w-full flex-col justify-center rounded border border-gray-300 px-4 py-2"
-            >
-              <div className="flex items-center gap-2 text-gray-500 dark:text-white">
-                <FileIcon size="30" className="shrink-0" />
-                <div className="min-w-0 text-sm">
-                  <div className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-                    {file.name}
-                  </div>
-                  <div className="text-xs text-gray-400 dark:text-gray-400">
-                    {formatFileSize(file.size)}
-                  </div>
-                </div>
-                <div className="grow" />
-                <div className="flex w-12 justify-end text-xs">
-                  {progress === 'PENDING' ? (
-                    <button
-                      type="button"
-                      className="rounded-md p-1 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      onClick={() => {
-                        void onChange?.(
-                          value.filter((_, index) => index !== i),
-                        );
-                      }}
-                    >
-                      <Trash2Icon className="shrink-0" />
-                    </button>
-                  ) : progress === 'ERROR' ? (
-                    <LucideFileWarning className="shrink-0 text-red-600 dark:text-red-400" />
-                  ) : progress !== 'COMPLETE' ? (
-                    <div className="flex flex-col items-end gap-0.5">
-                      {abortController && (
-                        <button
-                          type="button"
-                          className="rounded-md p-0.5 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          disabled={progress === 100}
-                          onClick={() => {
-                            abortController.abort();
-                          }}
-                        >
-                          <XIcon className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-400" />
-                        </button>
-                      )}
-                      <div>{Math.round(progress)}%</div>
-                    </div>
-                  ) : (
-                    <CheckCircleIcon className="shrink-0 text-green-600 dark:text-gray-400" />
-                  )}
-                </div>
-              </div>
-              {/* Progress Bar */}
-              {typeof progress === 'number' && (
-                <div className="relative h-0">
-                  <div className="absolute top-1 h-1 w-full overflow-clip rounded-full bg-gray-200 dark:bg-gray-700">
-                    <div
-                      className="h-full bg-gray-400 transition-all duration-300 ease-in-out dark:bg-white"
-                      style={{
-                        width: progress ? `${progress}%` : '0%',
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+            {pinataHash && <p>Uploaded to Pinata, hash: {pinataHash}</p>}
         </div>
-      </div>
     );
-  },
-);
-MultiFileDropzone.displayName = 'MultiFileDropzone';
+};
 
-export { MultiFileDropzone };
+export default MultiFileDropzone;

@@ -37,6 +37,7 @@ export async function POST(
 
         if (!hashID) new NextResponse("HashID is required", { status: 400});
 
+
         if (!categoryId) new NextResponse("Category id is required", { status: 400});
 
         if (!creatorId) new NextResponse("Color id is required", { status: 400});

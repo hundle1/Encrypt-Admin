@@ -7,12 +7,11 @@ import usePreviewModal from "@/hooks/use-preview-modal";
 import { MouseEventHandler } from 'react';
 import IconButton from "./icon-button";
 import Currency from "./currency";
-import { Category, Creator, Image, Product, Type, File } from "@prisma/client";
+import { Category, Creator, Image, Product, Type } from "@prisma/client";
 
 interface ProductCard {
     data: Product & {
         images: Image[],
-        files: File[]
     } | null;
     categories: Category[]
     creators: Creator[]

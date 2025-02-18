@@ -1,37 +1,40 @@
-import { NextResponse } from "next/server";
-import { spawn } from "child_process";
-import path from "path";
+import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
+import FormData from "form-data";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
-        const { folderPath } = await req.json();
+        const formData = await req.formData();
+        const file = formData.get("file") as Blob | null;
 
-        if (!folderPath) {
-            return NextResponse.json({ error: "Missing folderPath" }, { status: 400 });
+        if (!file) {
+            return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        // Đường dẫn thực tế trên server (Cần chỉnh sửa tùy hệ thống)
-        const serverFolderPath = path.join(process.cwd(), "uploads", folderPath);
+        // Convert Blob to Buffer
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        // Chạy script Python
-        const pythonProcess = spawn("python3", ["scripts/upload.py", serverFolderPath]);
+        // Prepare form data for Pinata
+        const pinataFormData = new FormData();
+        pinataFormData.append("file", buffer, "folder_upload.zip");
 
-        let output = "";
-        pythonProcess.stdout.on("data", (data) => {
-            output += data.toString();
-        });
+        const response = await axios.post(
+            "https://api.pinata.cloud/pinning/pinFileToIPFS",
+            pinataFormData,
+            {
+                headers: {
+                    "Content-Type": `multipart/form-data; boundary=${pinataFormData.getBoundary()}`,
+                    Authorization: `Bearer ${process.env.PINATA_JWT_TOKEN}`,
+                },
+            }
+        );
 
-        return new Promise((resolve) => {
-            pythonProcess.on("close", async () => {
-                try {
-                    const response = JSON.parse(output.trim());
-                    resolve(NextResponse.json(response));
-                } catch (err) {
-                    resolve(NextResponse.json({ error: "Failed to process Python response" }, { status: 500 }));
-                }
-            });
-        });
-    } catch (err) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        console.log("Upload successful:", response.data);
+
+        return NextResponse.json({ ipfsHash: response.data.IpfsHash });
+    } catch (error) {
+        console.error("Upload error:", error);
+        return NextResponse.json({ error: "Failed to upload to Pinata" }, { status: 500 });
     }
 }

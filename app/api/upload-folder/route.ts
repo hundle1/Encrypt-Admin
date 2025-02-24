@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
         // Prepare form data for Pinata
         const pinataFormData = new FormData();
-        pinataFormData.append("file", buffer, "folder_upload.zip");
+        pinataFormData.append("file", buffer, "stack_market.zip");
 
         const response = await axios.post(
             "https://api.pinata.cloud/pinning/pinFileToIPFS",

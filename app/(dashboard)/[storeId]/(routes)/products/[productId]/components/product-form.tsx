@@ -8,6 +8,7 @@ import { Category, Creator, Image, Product, Type } from "@prisma/client";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Plus, Folder, Check, File as FileIcon } from "lucide-react";
 import { Trash } from "lucide-react";
 import { ControllerRenderProps, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -157,47 +158,29 @@ export const ProductForm: React.FC<ProductFromProps> = ({
 
     const zipFolder = async (files: File[]) => {
         const zip = new JSZip();
-        
-        // Lấy tên thư mục từ file đầu tiên
-        const firstFile = files[0];
-        const folderPath = firstFile.webkitRelativePath.split('/')[0]; // Tên thư mục gốc
-    
+
         files.forEach((file) => {
-            zip.file(file.webkitRelativePath, file);
+            zip.file(file.webkitRelativePath || file.name, file);
         });
-    
+
         const zipBlob = await zip.generateAsync({ type: "blob" });
-        return new File([zipBlob], `${folderPath}.zip`, { type: "application/zip" }); // Đặt tên zip theo folder
+        return new File([zipBlob], "folder_upload.zip", { type: "application/zip" });
     };
-    
 
     const uploadFolderToPinata = async (files: File[]) => {
         try {
-            const zipFile = await zipFolder(files); // Tạo zip với tên thư mục
-            console.log("Zip successfully created:", zipFile.name);
-    
+            const zipFile = await zipFolder(files);
             const formData = new FormData();
-            formData.append("file", zipFile, zipFile.name); // Upload với tên file tương ứng
-    
-            const response = await axios.post(
-                "https://api.pinata.cloud/pinning/pinFileToIPFS",
-                formData,
-                {
-                    headers: {
-                        "Content-Type": `multipart/form-data`,
-                        Authorization: `Bearer ${process.env.PINATA_JWT_TOKEN}`,
-                    },
-                }
-            );
-    
-            console.log("Upload successful:", response.data);
-            return response.data.IpfsHash;  
+            formData.append("file", zipFile);
+            toast.success("File Zip successfully");
+            const response = await axios.post(`/api/upload-folder`, formData);
+            console.log("Upload response:", response.data);
+            return response.data.ipfsHash;
         } catch (error) {
             console.error("Upload error:", error);
             return null;
         }
     };
-    
     const [folderStructure, setFolderStructure] = useState<{ [key: string]: string[] }>({});
     const hashAndUploadFolder = async () => {
         if (!file.length) return;
@@ -205,11 +188,10 @@ export const ProductForm: React.FC<ProductFromProps> = ({
         try {
             const folderHash = await hashFolder(file);
             setHashID(folderHash);
-
             const ipfsHash = await uploadFolderToPinata(file);
-            toast.success("Folder uploaded to Pinata successfully.");
             if (ipfsHash) {
                 setHashID(ipfsHash);
+                toast.success("Hashed and uploaded folder successfully.");
             } else {
                 toast.error("Failed to upload to Pinata.");
             }
@@ -239,34 +221,62 @@ export const ProductForm: React.FC<ProductFromProps> = ({
             <Separator />
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8 ">
-                    <FormField
-                        control={form.control}
-                        name="images"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Choose a folder to upload</FormLabel>
-                                <FormControl className="flex justify-center align-center">
-                                    <input
-                                        className="flex w-1/2 h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400"
-                                        type="file"
-                                        ref={(input) => {
-                                            if (input) input.webkitdirectory = true;
-                                        }}
-                                        multiple
-                                        onChange={(event) => handleFolderSelection(event)}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <FormItem>
+                        <FormLabel>Choose a folder to upload</FormLabel>
+                        <FormControl>
+                            <div className="relative flex flex-col items-center justify-center w-1/2 h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400">
+                                <input
+                                    type="file"
+                                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                                    ref={(input) => {
+                                        if (input) input.webkitdirectory = true;
+                                    }}
+                                    multiple
+                                    onChange={(event) => handleFolderSelection(event)}
+
+                                />
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                    <div className="flex gap-2 text-gray-500">
+                                        Input include:
+                                        <Folder className="w-6 h-6 text-gray-500" /> /
+                                        <FileIcon className="w-6 h-6 text-gray-500" />
+                                    </div>
+                                    <Plus className="w-6 h-6 text-gray-400" />
+                                    <p className="text-sm text-gray-500">Click to upload</p>
+                                </div>
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+
                     <Button onClick={hashAndUploadFolder} disabled={loadingHash || hashID !== null}>
                         {loadingHash ? "Hashing..." : "Hash"}
                     </Button>
                     {hashID && (
-                        <div className="mt-4">
-                            <strong>Hash ID:</strong> {hashID}
-                        </div>
+                        <>
+                            <FormField
+                                control={form.control}
+                                name="hashID"
+                                render={({ field }) => (
+                                    <div className="mt-4">
+                                        <strong >Hash String:</strong> {hashID}
+                                    </div>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="hashID"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>IPFS hash ID:</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={loading} placeholder='Product Name' {...field} value={hashID} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </>
                     )}
                     {/* Hiển thị các input khác chỉ khi đã hash thành công và có file */}
                     {file && hashID && (

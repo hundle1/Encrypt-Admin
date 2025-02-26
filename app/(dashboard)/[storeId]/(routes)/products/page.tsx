@@ -31,6 +31,7 @@ const ProductsPage = async ({
         image: item.images[0].url,
         isFeatured: item.isFeatured,
         isArchived: item.isArchived,
+        hashID: item.hashID,
         price: formatter.format(Number(item.price)),
         category: item.category.name,
         type: item.type.name,

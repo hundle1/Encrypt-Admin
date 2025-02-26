@@ -7,6 +7,7 @@ export type ProductColumn = {
     name: string
     price: string
     type: string
+    hashID: string
     image: string
     category: string
     creator: string
@@ -44,6 +45,10 @@ export const columns: ColumnDef<ProductColumn>[] = [
         accessorKey: 'type',
         header: 'Type',
     },
+    // {
+    //     accessorKey: 'hashID',
+    //     header: 'Product IPFS ID',
+    // },
     {
         accessorKey: 'creator',
         header: 'Creator',

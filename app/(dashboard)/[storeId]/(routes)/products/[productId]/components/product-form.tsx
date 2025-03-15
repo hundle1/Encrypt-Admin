@@ -249,7 +249,7 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                         <FormMessage />
                     </FormItem>
 
-                    <Button onClick={hashAndUploadFolder} disabled={loadingHash || hashID !== null}>
+                    <Button className="m-4" onClick={hashAndUploadFolder} disabled={loadingHash || hashID !== null}>
                         {loadingHash ? "Hashing..." : "Hash"}
                     </Button>
                     {hashID && (

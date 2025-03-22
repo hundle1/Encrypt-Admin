@@ -68,6 +68,7 @@ model Product {
   creator     Creator     @relation(fields: [creatorId], references: [id])
   images      Image[]     // Relation to Image model
   orderItems  OrderItem[] // Relation to OrderItem model
+  clicks      ProductClick[] // Relation to ProductClick model
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -75,6 +76,16 @@ model Product {
   @@index([categoryId])
   @@index([typeId])
   @@index([creatorId])
+}
+
+model ProductClick {
+  id        String   @id @default(uuid())
+  productId String   @unique
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String?
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 

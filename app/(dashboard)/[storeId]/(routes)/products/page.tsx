@@ -18,7 +18,8 @@ const ProductsPage = async ({
             category: true,
             images: true,
             type: true,
-            creator: true
+            creator: true,
+            clicks: true
         },
         orderBy: {
             createdAt: 'desc'
@@ -28,7 +29,7 @@ const ProductsPage = async ({
     const formattedProducts: ProductColumn[] = products.map(item => ({
         id: item.id,
         name: item.name,
-        image: item.images[0].url,
+        image: item.images.length > 0 ? item.images[0].url : '', // Kiểm tra nếu có ảnh
         isFeatured: item.isFeatured,
         isArchived: item.isArchived,
         hashID: item.hashID,
@@ -37,6 +38,7 @@ const ProductsPage = async ({
         type: item.type.name,
         creator: item.creator.name,
         createdAt: format(item.createdAt, "MMMM do, yyyy"),
+        clicks: item.clicks?.reduce((acc, click) => acc + (click.count || 0), 0) || 0 // Tính tổng số lần click
     }));
 
     return (

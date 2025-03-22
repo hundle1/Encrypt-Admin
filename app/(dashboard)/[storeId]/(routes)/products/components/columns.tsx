@@ -13,6 +13,7 @@ export type ProductColumn = {
     creator: string
     isFeatured: boolean
     createdAt: string
+    clicks: number
 }
 
 export const columns: ColumnDef<ProductColumn>[] = [
@@ -21,7 +22,7 @@ export const columns: ColumnDef<ProductColumn>[] = [
         header: 'Image',
         cell: ({ row }) => (
             <div className='flex items-center gap-x-2'>
-                <img src={row.original.image} className='w-32 h-32 rounded-xl object-scale-down border border-gray-400' />
+                <img src={row.original.image} className='w-32 h-32 rounded-xl object-scale-down border border-gray-400 ' />
             </div>
         )
     },
@@ -42,20 +43,13 @@ export const columns: ColumnDef<ProductColumn>[] = [
         header: 'Category',
     },
     {
-        accessorKey: 'type',
-        header: 'Type',
-    },
-    // {
-    //     accessorKey: 'hashID',
-    //     header: 'Product IPFS ID',
-    // },
-    {
-        accessorKey: 'creator',
-        header: 'Creator',
-    },
-    {
         accessorKey: 'createdAt',
         header: 'Date',
+    },
+    {
+        accessorKey: 'clickCount',
+        header: 'Watchs',
+        cell: ({ row }) => <span>{row.original.clicks || 0} times</span>
     },
     {
         id: 'actions',

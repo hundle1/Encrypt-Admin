@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils"
-import { AreaChart, Bolt, Rocket, CopyPlus, FolderKanban, PackageSearch, Presentation, ShieldCheck, SquareDashedBottomCode } from "lucide-react";
+import { AreaChart, Bolt, Rocket, CopyPlus, FolderKanban, PackageSearch, Presentation, ShieldCheck, SquareDashedBottomCode, FolderLock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { Separator } from "./ui/separator";
@@ -47,8 +47,11 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
         href: `/${params.storeId}/products`,
         label: <div className="flex ml-5"><FolderKanban size={20} className="text-[#1dc071]"/> &nbsp; Mint Product</div>,
         active: pathname === `/${params.storeId}/products`
+    }, {
+        href: `/${params.storeId}/minting`,
+        label: <div className="flex ml-5"><FolderLock size={20} className="text-[#1dc071]"/> &nbsp; Upload Product <Sparkles size={15} className="text-[#ff0505]" /></div>,
+        active: pathname === `/${params.storeId}/minting`
     }];
-
     const routesSettings = [{
         href: `/${params.storeId}/settings`,
         label: <div className="flex ml-5"><Bolt size={20} className="text-[#1dc071]"/> &nbsp; Setting</div>,
@@ -56,7 +59,7 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
     }];
     const routesFunding = [];
     return (
-        <nav className={cn("flex  self-start p-4 pt-8 space-y-8 mx-0", className)}>
+        <nav className={cn("flex  self-start p-4 pt-8 space-y-6 mx-0", className)}>
             <Link href="http://localhost:3001/" className="w-full">
                 <Button className={cn("text-sm font-medium hover:font-bold transition duration-300 w-full")}>
                     Go to Store

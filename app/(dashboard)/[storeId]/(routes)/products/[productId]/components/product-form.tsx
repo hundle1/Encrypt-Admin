@@ -121,27 +121,31 @@ export const ProductForm: React.FC<ProductFromProps> = ({
             setOpen(false);
         }
     }
+    const [folderName, setFolderName] = useState<string | null>(null);
     const handleFolderSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files || files.length === 0) return;
 
-        setFile(Array.from(files)); // Cập nhật danh sách file
+        setFile(Array.from(files));
 
-        const folderStructure: { [key: string]: string[] } = {};
+        const folderPath = files[0].webkitRelativePath.split('/')[0];
+        setFolderName(folderPath);
 
+        const structure: { [key: string]: string[] } = {};
         Array.from(files).forEach(file => {
             const relativePath = file.webkitRelativePath;
             const pathParts = relativePath.split('/');
-            const folderPath = pathParts.slice(0, -1).join('/');
+            const folder = pathParts.slice(0, -1).join('/');
             const fileName = pathParts[pathParts.length - 1];
 
-            if (!folderStructure[folderPath]) {
-                folderStructure[folderPath] = [];
+            if (!structure[folder]) {
+                structure[folder] = [];
             }
-            folderStructure[folderPath].push(fileName);
+            structure[folder].push(fileName);
         });
-        setFolderStructure(folderStructure);
+        setFolderStructure(structure);
     };
+
     const hashFolder = async (files: File[]) => {
         const hash = createHash('sha256');
 
@@ -223,7 +227,7 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8 ">
                     <FormItem>
                         <FormLabel>Choose a folder to upload</FormLabel>
-                        <FormControl>
+                        {/* <FormControl>
                             <div className="relative flex flex-col items-center justify-center w-1/2 h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400">
                                 <input
                                     type="file"
@@ -245,7 +249,42 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                                     <p className="text-sm text-gray-500">Click to upload</p>
                                 </div>
                             </div>
-                        </FormControl>
+                        </FormControl> */}
+                        {!file.length ? (
+                            <div className="relative flex flex-col items-center justify-center w-1/2 h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400">
+                                <input
+                                    type="file"
+                                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                                    ref={(input) => {
+                                        if (input) input.webkitdirectory = true;
+                                    }}
+                                    multiple
+                                    onChange={handleFolderSelection}
+                                />
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                    <Folder className="w-6 h-6 text-gray-500" />
+                                    <p className="text-sm text-gray-500">Click to upload folder</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-4 bg-white shadow-lg rounded-xl w-2/3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Folder className="w-6 h-6 text-blue-500" />
+                                        <span className="font-semibold text-lg">{folderName}</span>
+                                    </div>
+                                    <span className="text-gray-500">{file.length} files</span>
+                                </div>
+                                <ul className="mt-4 max-h-60 overflow-y-auto border-t pt-2">
+                                    {file.map((f, index) => (
+                                        <li key={index} className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg">
+                                            <FileIcon className="w-4 h-4 text-gray-500" />
+                                            <span className="text-sm text-gray-700">{f.name}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         <FormMessage />
                     </FormItem>
 

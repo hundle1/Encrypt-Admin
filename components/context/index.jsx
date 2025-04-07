@@ -65,14 +65,13 @@ export const StateContextProvider = ({ children }) => {
         typeId,
       ]);
   
-      console.log("Giao dịch tạo sản phẩm thành công:", tx);
+      console.log("Minting Trasaction complete:", tx);
       return tx;
     } catch (error) {
-      console.error("Lỗi khi tạo sản phẩm:", error);
+      console.error("Error in minting:", error);
       throw error;
     }
   };
-  
 
   return (
     <StateContext.Provider

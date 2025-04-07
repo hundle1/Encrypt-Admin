@@ -45,11 +45,11 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
         active: pathname === `/${params.storeId}/creators`
     }, {
         href: `/${params.storeId}/products`,
-        label: <div className="flex ml-5"><FolderKanban size={20} className="text-[#1dc071]"/> &nbsp; Mint Product</div>,
+        label: <div className="flex ml-5"><FolderKanban size={20} className="text-[#1dc071]"/> &nbsp;Products </div>,
         active: pathname === `/${params.storeId}/products`
     }, {
         href: `/${params.storeId}/minting`,
-        label: <div className="flex ml-5"><FolderLock size={20} className="text-[#1dc071]"/> &nbsp; Upload Product <Sparkles size={15} className="text-[#ff0505]" /></div>,
+        label: <div className="flex ml-5"><FolderLock size={20} className="text-[#1dc071]"/> &nbsp; Upload NFS <Sparkles size={15} className="text-[#ff0505]" /></div>,
         active: pathname === `/${params.storeId}/minting`
     }];
     const routesSettings = [{

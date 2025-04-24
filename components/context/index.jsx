@@ -30,8 +30,6 @@ export const StateContextProvider = ({ children }) => {
       loadContract();
     }
   }, [sdk]);
-  console.log("Contract instance:", contract);
-
   useEffect(() => {
     if (signer) {
       setSdk(ThirdwebSDK.fromSigner(signer, "sepolia"));

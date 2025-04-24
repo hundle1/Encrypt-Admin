@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import * as z from 'zod';
@@ -37,6 +37,13 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [mintedProducts, setMintedProducts] = useState<any[]>([]);
 
+    // Auto connect nếu chưa có signer
+    useEffect(() => {
+        if (!signer) {
+            connect();
+        }
+    }, [signer, connect]);
+
     // Khởi tạo form với zodResolver
     const form = useForm<MintingFormValues>({
         resolver: zodResolver(formSchema),
@@ -50,7 +57,7 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
         }
     });
 
-    // Hàm fetch danh sách NFT đã mint từ contract, lọc theo ví hiện tại
+    // Fetch danh sách NFT đã mint từ contract theo ví hiện tại
     useEffect(() => {
         const fetchMintedProducts = async () => {
             if (contract && address) {
@@ -65,7 +72,7 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
             }
         };
         fetchMintedProducts();
-    }, [contract, address, loading]); // mỗi khi loading thay đổi (mint thành công) sẽ refresh lại
+    }, [contract, address, loading]);
 
     // Submit mint NFT
     const onSubmit = async (data: MintingFormValues) => {
@@ -116,8 +123,8 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
         if (selectedProduct) {
             return (
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex space-x-8 w-full">
-                        <div className="flex flex-col items-center w-1/3 bg-gray-100 p-4 rounded-lg shadow-md">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col md:flex-row space-y-4 md:space-x-8 w-full">
+                        <div className="flex flex-col items-center md:w-1/3 bg-gray-100 p-4 rounded-lg shadow-md">
                             <Image
                                 src={selectedProduct.images.length > 0 ? selectedProduct.images[0].url : '/placeholder.png'}
                                 alt={selectedProduct.name}
@@ -138,7 +145,7 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
                                 </p>
                             </div>
                         </div>
-                        <div className="w-2/3 space-y-4">
+                        <div className="md:w-2/3 space-y-4">
                             <FormField
                                 control={form.control}
                                 name="id"
@@ -249,19 +256,25 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
                                     </FormItem>
                                 )}
                             />
-                            <Button disabled={loading} className="w-full" type="submit">
-                                Mint NFT
-                            </Button>
-                            <Button variant="outline" onClick={() => setSelectedProduct(null)} className="w-full">
-                                Chọn sản phẩm khác
-                            </Button>
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <Button disabled={loading} className="w-full" type="submit">
+                                    Mint NFT
+                                </Button>
+                                <Button variant="outline" onClick={() => {
+                                    setSelectedProduct(null);
+                                    // Quay lại danh sách sản phẩm
+                                    setIsSelecting(false);
+                                }} className="w-full">
+                                    Quay lại danh sách
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </Form>
             );
         } else {
             return (
-                <div className="w-full flex-1 flex flex-col overflow-hidden">
+                <div className="w-full flex flex-col h-full">
                     <div className="mb-4">
                         <input
                             type="text"
@@ -308,53 +321,51 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
     };
 
     return (
-        <div className="flex justify-center items-center w-full py-4">
-            {/* Vùng chứa toàn bộ giao diện với border lớn */}
-            <div className="border-2 border-gray-300 rounded-lg p-4 w-full max-w-5xl">
-                {/* Nút chọn sản phẩm */}
-                <div className="flex justify-center mb-4">
-                    <Button
-                        onClick={async () => {
-                            if (!signer) {
-                                await connect();
-                            }
-                            setIsSelecting(true);
-                        }}
-                        className="text-xl px-6 py-3"
-                    >
-                        Choose a Product To Mint
-                    </Button>
-                </div>
-                {/* Nếu đang chọn sản phẩm thì hiện form mint, ngược lại hiển thị danh sách NFT đã mint */}
+        <div className="w-full py-4 flex  gap-8">
+            {/* Phần danh sách NFT đã mint */}
+            <div className="border-2 border-gray-300 rounded-lg p-4 h-[650px] max-w-2xl mx-auto">
+                <p className="font-bold mb-4">NFS Minted List</p>
+                {mintedProducts.length > 0 ? (
+                    <div className="grid grid-cols-4 gap-2 overflow-y-auto h-[550px] w-full">
+                        {mintedProducts.map((product) => (
+                            <div
+                                key={product.productId}
+                                className="w-[90px] h-[90px] overflow-hidden rounded-md transition-transform transform hover:scale-105 hover:shadow-lg"
+                            >
+                                <Image
+                                    src={product.image ? product.image : '/placeholder.png'}
+                                    alt={product.name}
+                                    width={520}
+                                    height={520}
+                                    className="object-cover w-full h-full"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-center text-gray-500">
+                        Chưa có NFT nào được mint từ ví của bạn.
+                    </p>
+                )}
+            </div>
+
+            {/* Phần chọn sản phẩm để mint */}
+            <div className="border-2 border-gray-300 rounded-lg p-4 w-full max-w-5xl mx-auto">
                 {isSelecting ? (
                     renderSelectProduct()
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {mintedProducts.length > 0 ? (
-                            mintedProducts.map((product) => (
-                            <div key={product.productId} className="bg-white p-4 rounded-lg shadow-md">
-                                <Image
-                                src={product.image ? product.image : '/placeholder.png'}
-                                alt={product.name}
-                                width={300}
-                                height={300}
-                                className="rounded-md object-cover border border-gray-300"
-                                />
-                                <h2 className="text-xl font-bold mt-2">{product.name}</h2>
-                                <p className="text-sm text-gray-500">
-                                <span className="font-medium">Price:</span> {product.price.toString()}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                <span className="font-medium">Created:</span>{" "}
-                                {format(new Date(product.timestamp.toNumber() * 1000), 'dd/MM/yyyy')}
-                                </p>
-                            </div>
-                            ))
-                        ) : (
-                            <p className="text-center text-gray-500">
-                            Chưa có NFT nào được mint từ ví của bạn.
-                            </p>
-                        )}
+                    <div className="flex justify-center flex-col items-center h-full">
+                        <Button
+                            onClick={async () => {
+                                if (!signer) {
+                                    await connect();
+                                }
+                                setIsSelecting(true);
+                            }}
+                            className="text-xl px-6 py-3"
+                        >
+                            Choose a Product To Mint
+                        </Button>
                     </div>
                 )}
             </div>

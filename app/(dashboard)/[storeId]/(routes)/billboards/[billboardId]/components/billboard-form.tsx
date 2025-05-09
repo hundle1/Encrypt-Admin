@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from 'react'
 import * as z from 'zod'
 import { Billboard } from "@prisma/client";
 import { Heading } from "@/components/ui/heading";
@@ -16,9 +15,9 @@ import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
 import { AlertModal } from '@/components/modals/alert-modal';
 import ImageUpload from '@/components/ui/image-upload';
-
+import { useEffect, useState } from "react";
 interface SettingsFromProps {
-    initialData: Billboard | null; 
+    initialData: Billboard | null;
 }
 
 const formSchema = z.object({
@@ -32,7 +31,11 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
 
     const params = useParams();
     const router = useRouter();
+    const [mounted, setMounted] = useState(false);
 
+    useEffect(() => {
+        setMounted(true);
+    }, []);
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -50,6 +53,7 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
     });
 
     const onSubmit = async (data: BillboardFormValues) => {
+        console.log("Submitting billboard data:", data);
         try {
             setLoading(true);
             if (initialData) {
@@ -60,7 +64,7 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
             router.refresh();
             router.push(`/${params.storeId}/billboards`);
             toast.success(toastMessage)
-        } catch(err) {
+        } catch (err) {
             toast.error("Something went wrong.");
         } finally {
             setLoading(false)
@@ -74,7 +78,7 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
             router.refresh();
             router.push(`/${params.storeId}/billboards`)
             toast.success("Billboard deleted.")
-        } catch(err) {
+        } catch (err) {
             toast.error("Make sure you removed all categories using this billboard first.");
         } finally {
             setLoading(false)
@@ -85,10 +89,10 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
     return (
         <>
             <AlertModal
-            isOpen={open}
-            onClose={() => setOpen(false)}
-            onConfirm={onDelete}
-            loading={loading}
+                isOpen={open}
+                onClose={() => setOpen(false)}
+                onConfirm={onDelete}
+                loading={loading}
             />
             <div className="flex items-center justify-between">
                 <Heading title={title} description={description} />
@@ -102,9 +106,9 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
                     <FormField
-                        control={form.control} 
+                        control={form.control}
                         name="imageUrl"
-                        render={({field}) => (
+                        render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Background Image</FormLabel>
                                 <FormControl>
@@ -121,9 +125,9 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
                     />
                     <div className='grid grid-cols-3 gap-8'>
                         <FormField
-                            control={form.control} 
+                            control={form.control}
                             name="label"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Label</FormLabel>
                                     <FormControl>
@@ -137,7 +141,6 @@ export const BillboardForm: React.FC<SettingsFromProps> = ({ initialData }) => {
                     <Button disabled={loading} className='ml-auto' type='submit'>{action}</Button>
                 </form>
             </Form>
-            {/* <Separator /> */}
         </>
     )
 }

@@ -1,6 +1,7 @@
 "use client"
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
+import { SiEthereum } from 'react-icons/si';
 
 export type ProductColumn = {
     id: string
@@ -37,6 +38,12 @@ export const columns: ColumnDef<ProductColumn>[] = [
     {
         accessorKey: 'price',
         header: 'Price',
+        cell: ({ row }) => (
+            <div className='flex items-center gap-x-2'>
+                <SiEthereum className="text-violet-900" size={18} />
+                {Number(row.original.price)?.toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 4,})}
+            </div>
+        )
     },
     {
         accessorKey: 'category',

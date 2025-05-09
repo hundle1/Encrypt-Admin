@@ -46,8 +46,13 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     state : {
       columnFilters,
+      pagination: {
+        pageIndex: 0,
+        pageSize: 4, // 👈 chỉ hiển thị 4 sản phẩm mỗi trang
+      }
     }
   })
+  
 
   return (
     <div>

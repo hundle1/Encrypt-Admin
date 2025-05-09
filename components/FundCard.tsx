@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface FundCardProps {
   owner: string;
@@ -10,18 +10,24 @@ interface FundCardProps {
   image: string;
   handleClick: () => void;
 }
-interface DaysLeftFunction {
-  (deadline: string): string;
-}
 
-const daysLeft: DaysLeftFunction = (deadline) => {
-  const difference = new Date(deadline).getTime() - Date.now();
-  const remainingDays = difference / (1000 * 3600 * 24);
+const FundCard: React.FC<FundCardProps> = ({
+  owner,
+  title,
+  description,
+  target,
+  deadline,
+  amountCollected,
+  image,
+  handleClick,
+}) => {
+  const [remainingDays, setRemainingDays] = useState<string>('');
 
-  return remainingDays.toFixed(0);
-};
-const FundCard: React.FC<FundCardProps> = ({ owner, title, description, target, deadline, amountCollected, image, handleClick }) => {
-  const remainingDays = daysLeft(deadline);
+  useEffect(() => {
+    const difference = new Date(deadline).getTime() - Date.now();
+    const days = difference / (1000 * 3600 * 24);
+    setRemainingDays(days.toFixed(0));
+  }, [deadline]);
 
   return (
     <div
@@ -36,7 +42,7 @@ const FundCard: React.FC<FundCardProps> = ({ owner, title, description, target, 
 
       <div className="flex flex-col p-4">
         {/* Tag */}
-        <div className="flex flex-row items-center mb-[18px]">\
+        <div className="flex flex-row items-center mb-[18px]">
           <img src="./tag.svg" alt="" />
           <p className="ml-[12px] mt-[2px] font-epilogue font-medium text-[12px] text-[#000000]">
             Education
@@ -49,6 +55,7 @@ const FundCard: React.FC<FundCardProps> = ({ owner, title, description, target, 
             {title}
           </h3>
         </div>
+
         {/* Raised & Days Left */}
         <div className="flex justify-between flex-wrap mt-[15px] gap-2">
           <div className="flex flex-col">
@@ -61,7 +68,7 @@ const FundCard: React.FC<FundCardProps> = ({ owner, title, description, target, 
           </div>
           <div className="flex flex-col">
             <h4 className="font-epilogue font-semibold text-[14px] text-[#00000078] leading-[22px]">
-              {remainingDays}
+              {remainingDays || '--'}
             </h4>
             <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#94a3b8] sm:max-w-[120px] truncate">
               Days Left
@@ -72,7 +79,7 @@ const FundCard: React.FC<FundCardProps> = ({ owner, title, description, target, 
         {/* Owner */}
         <div className="flex items-center mt-[20px] gap-[12px]">
           <div className="w-[30px] h-[30px] rounded-full flex justify-center items-center bg-[#334155]">
-          <img src="./user.svg" alt="" />
+            <img src="./user.svg" alt="" />
           </div>
           <p className="flex-1 font-epilogue font-normal text-[12px] text-[#94a3b8] truncate">
             by <span className="text-[#000000]">{owner}</span>
@@ -80,8 +87,7 @@ const FundCard: React.FC<FundCardProps> = ({ owner, title, description, target, 
         </div>
       </div>
     </div>
+  );
+};
 
-  )
-}
-
-export default FundCard
+export default FundCard;

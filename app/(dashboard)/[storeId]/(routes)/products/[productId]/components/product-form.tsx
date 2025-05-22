@@ -34,7 +34,7 @@ interface ProductFromProps {
 const formSchema = z.object({
     name: z.string().min(1),
     images: z.object({ url: z.string() }).array(),
-    price: z.coerce.number().min(1),
+    price: z.coerce.number().gt(0, { message: "Price must be greater than 0" }),
     hashID: z.coerce.string().min(1),
     describe: z.string().min(1),
     categoryId: z.string().min(1),
@@ -168,30 +168,63 @@ export const ProductForm: React.FC<ProductFromProps> = ({
         });
 
         const zipBlob = await zip.generateAsync({ type: "blob" });
-        return new File([zipBlob], "folder_upload.zip", { type: "application/zip" });
+        const zipFile = new File([zipBlob], "folder_upload.zip", { type: "application/zip" });
+
+        // Verify ZIP file size
+        if (zipFile.size === 0) {
+            throw new Error("Generated ZIP file is empty");
+        }
+
+        return zipFile;
     };
 
     const uploadFolderToPinata = async (files: File[]) => {
         try {
             const zipFile = await zipFolder(files);
+            if (zipFile.size > 100 * 1024 * 1024) {
+                throw new Error("ZIP file exceeds 100MB limit");
+            }
+
             const formData = new FormData();
             formData.append("file", zipFile);
-            toast.success("File Zip successfully");
-            const response = await axios.post(`/api/upload-folder`, formData);
+
+            const response = await axios.post("/api/upload-folder", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            if (!response.data.ipfsHash) {
+                throw new Error("No IPFS hash returned");
+            }
+
             console.log("Upload response:", response.data);
+            toast.success("File uploaded successfully");
             return response.data.ipfsHash;
-        } catch (error) {
+        } catch (error: any) {
+            // Improved error logging
             console.error("Upload error:", error);
+            const errorMsg =
+                error.response?.data?.error?.details ||
+                error.response?.data?.error ||
+                error.message ||
+                "Unknown error";
+            toast.error(`Failed to upload to Pinata: ${errorMsg}`);
             return null;
         }
     };
     const [folderStructure, setFolderStructure] = useState<{ [key: string]: string[] }>({});
     const hashAndUploadFolder = async () => {
-        if (!file.length) return;
+        if (!file.length) {
+            toast.error("No files selected.");
+            return;
+        }
         setLoadingHash(true);
         try {
+            console.log("Starting hash calculation...");
             const folderHash = await hashFolder(file);
+            console.log("Folder hash:", folderHash);
             setHashID(folderHash);
+
+            console.log("Starting upload to Pinata...");
             const ipfsHash = await uploadFolderToPinata(file);
             if (ipfsHash) {
                 setHashID(ipfsHash);
@@ -200,6 +233,7 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                 toast.error("Failed to upload to Pinata.");
             }
         } catch (error) {
+            console.error("Hash/Upload error:", error);
             toast.error("Error hashing/uploading folder.");
         } finally {
             setLoadingHash(false);
@@ -255,9 +289,7 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                                 <input
                                     type="file"
                                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                                    ref={(input) => {
-                                        if (input) input.webkitdirectory = true;
-                                    }}
+                                    {...{ webkitdirectory: "true" }}
                                     multiple
                                     onChange={handleFolderSelection}
                                 />
@@ -361,12 +393,19 @@ export const ProductForm: React.FC<ProductFromProps> = ({
                                         <FormItem>
                                             <FormLabel>Price</FormLabel>
                                             <FormControl>
-                                                <Input type="number" disabled={loading} placeholder='Product Price' {...field} />
+                                                <Input
+                                                    type="number"
+                                                    step="0.0001" // hỗ trợ số thập phân nhỏ
+                                                    disabled={loading}
+                                                    placeholder="0.001"
+                                                    {...field}
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
+
                                 <FormField
                                     control={form.control}
                                     name="categoryId"

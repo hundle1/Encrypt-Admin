@@ -9,6 +9,12 @@ export async function POST(
     try {
         const { userId } = auth();
         const body = await req.json();
+        function withCORS(response: NextResponse) {
+            response.headers.set("Access-Control-Allow-Origin", "*"); // hoặc 'http://localhost:3001'
+            response.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+            response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization");
+            return response;
+        }
 
         const {
             name,
@@ -89,7 +95,7 @@ export async function POST(
             }
         })
 
-        return NextResponse.json(product);
+        return withCORS(NextResponse.json(product));
 
     } catch (err) {
         console.log(`[PRODUCTS_POST] ${err}`);
@@ -107,6 +113,12 @@ export async function GET(
         const typeId = searchParams.get('typeId') || undefined;
         const creatorId = searchParams.get('creatorId') || undefined;
         const isFeatured = searchParams.get('isFeatured');
+        function withCORS(response: NextResponse) {
+            response.headers.set("Access-Control-Allow-Origin", "*"); // hoặc 'http://localhost:3001'
+            response.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+            response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization");
+            return response;
+        }
 
         if (!params.storeId) {
             return new NextResponse("Store Id is required", { status: 400});
@@ -132,8 +144,7 @@ export async function GET(
             }
         })
 
-        return NextResponse.json(products);
-
+        return withCORS(NextResponse.json(products));
     } catch (err) {
         console.log(`[PRODUCTS_GET] ${err}`);
         return new NextResponse(`Internal error`, { status: 500})

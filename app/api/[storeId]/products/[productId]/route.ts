@@ -10,6 +10,12 @@ export async function GET(
         if (!params.productId) {
             return new NextResponse("Product id is required", { status: 400 });
         }
+        function withCORS(response: NextResponse) {
+            response.headers.set("Access-Control-Allow-Origin", "*"); // hoặc 'http://localhost:3001'
+            response.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+            response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization");
+            return response;
+        }
 
         const product = await prismadb.product.findUnique({
             where: { id: params.productId },
@@ -22,7 +28,7 @@ export async function GET(
             }
         });
 
-        return NextResponse.json(product);
+        return withCORS(NextResponse.json(product));
     } catch (err) {
         console.log('[PRODUCT_GET]', err);
         return new NextResponse('Internal error', { status: 500 });
@@ -37,7 +43,12 @@ export async function PATCH(
     try {
         const { userId } = auth();
         const body = await req.json();
-
+        function withCORS(response: NextResponse) {
+            response.headers.set("Access-Control-Allow-Origin", "*"); // hoặc 'http://localhost:3001'
+            response.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+            response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization");
+            return response;
+        }
         const {
             name,
             price,
@@ -124,7 +135,7 @@ export async function PATCH(
             }
         })
 
-        return NextResponse.json(product);
+        return withCORS(NextResponse.json(product));
     } catch (err) {
         console.log('[PRODUCT_PATCH]', err)
         return new NextResponse('Internal error', { status: 500 })
@@ -139,7 +150,12 @@ export async function DELETE(
 ) {
     try {
         const { userId } = auth();
-
+        function withCORS(response: NextResponse) {
+            response.headers.set("Access-Control-Allow-Origin", "*"); // hoặc 'http://localhost:3001'
+            response.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+            response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization");
+            return response;
+        }
         if (!userId) {
             return new NextResponse("Unauthenticated", { status: 401 })
         }
@@ -166,7 +182,7 @@ export async function DELETE(
         });
 
 
-        return NextResponse.json(product);
+        return withCORS(NextResponse.json(product));
     } catch (err) {
         console.log('[PRODUCT_DELETE]', err)
         return new NextResponse('Internal error', { status: 500 })

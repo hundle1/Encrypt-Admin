@@ -10,21 +10,22 @@ import { toast } from 'react-hot-toast';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { ethers } from 'ethers';
 import { useStateContext } from '@/components/context';
 
 const formSchema = z.object({
-    id: z.string().min(1, "Phải chọn sản phẩm"),
-    name: z.string().min(1, "Nhập tên sản phẩm"),
-    describe: z.string().min(1, "Nhập mô tả"),
-    price: z.string().min(1, "Nhập giá tiền"),
-    IPFShash: z.string().min(1, "Nhập IPFS hash"),
-    typeId: z.string().min(1, "Nhập loại sản phẩm")
+    id: z.string().min(1, 'Phải chọn sản phẩm'),
+    name: z.string().min(1, 'Nhập tên sản phẩm'),
+    describe: z.string().min(1, 'Nhập mô tả'),
+    price: z.coerce.number().positive('Giá phải lớn hơn 0'),
+    IPFShash: z.string().min(1, 'Nhập IPFS hash'),
+    typeId: z.string().min(1, 'Nhập loại sản phẩm'),
 });
 
 type MintingFormValues = z.infer<typeof formSchema>;
 
 interface MintingFormProps {
-    products: any[]; // Bạn có thể định nghĩa kiểu cụ thể hơn nếu có
+    products: any[];
 }
 
 export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
@@ -34,89 +35,87 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
     const [loading, setLoading] = useState(false);
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState('');
     const [mintedProducts, setMintedProducts] = useState<any[]>([]);
 
-    // Auto connect nếu chưa có signer
     useEffect(() => {
-        if (!signer) {
-            connect();
-        }
+        if (!signer) connect();
     }, [signer, connect]);
 
-    // Khởi tạo form với zodResolver
+    useEffect(() => {
+        const fetchMintedProducts = async () => {
+            if (!contract || !address) return;
+            try {
+                const allProducts = await contract.call('getAllProducts');
+                const minted = allProducts.filter(
+                    (p: any) => p.creatorId.toLowerCase() === address.toLowerCase()
+                );
+                setMintedProducts(minted);
+            } catch (error) {
+                console.error('Error fetching minted products:', error);
+            }
+        };
+        fetchMintedProducts();
+    }, [contract, address, loading]);
+
     const form = useForm<MintingFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             id: '',
             name: '',
             describe: '',
-            price: '',
+            price: 0,
             IPFShash: '',
-            typeId: ''
-        }
+            typeId: '',
+        },
     });
 
-    // Fetch danh sách NFT đã mint từ contract theo ví hiện tại
-    useEffect(() => {
-        const fetchMintedProducts = async () => {
-            if (contract && address) {
-                try {
-                    const allProducts = await contract.call("getAllProducts");
-                    // Lọc sản phẩm theo creatorId (so sánh theo chữ thường)
-                    const minted = allProducts.filter((p: any) => p.creatorId.toLowerCase() === address.toLowerCase());
-                    setMintedProducts(minted);
-                } catch (error) {
-                    console.error("Error fetching minted products:", error);
-                }
-            }
-        };
-        fetchMintedProducts();
-    }, [contract, address, loading]);
-
-    // Submit mint NFT
     const onSubmit = async (data: MintingFormValues) => {
-        try {
-            if (!contract) {
-                toast.error("Contract is not loaded");
+        if (!contract) {
+            toast.error('Contract is not loaded');
+            return;
+        }
+        if (!signer) {
+            await connect();
+            if (!signer) {
+                toast.error('Failed to connect wallet. Please try again.');
                 return;
             }
-            if (!signer) {
-                await connect();
-                if (!signer) {
-                    toast.error("Failed to connect wallet. Please try again.");
-                    return;
-                }
-            }
+        }
+
+        try {
             setLoading(true);
-            const tx = await contract.call("createProduct", [
+            // Chuyển price từ số thập phân sang Wei
+            const priceInWei = ethers.utils.parseEther(data.price.toString());
+
+            const tx = await contract.call('createProduct', [
                 data.id,
                 data.name,
-                data.price,
+                priceInWei,
                 data.describe,
                 data.IPFShash,
-                selectedProduct ? [selectedProduct.images[0].url] : [""],
-                data.typeId
+                selectedProduct ? [selectedProduct.images[0].url] : [''],
+                data.typeId,
             ]);
-            console.log("Transaction: ", tx);
-            toast.success("NFT minted successfully");
-            // Reset về trạng thái ban đầu
+
+            console.log('Transaction: ', tx);
+            toast.success('NFT minted successfully');
+            form.reset();
             setIsSelecting(false);
             setSelectedProduct(null);
-            form.reset();
             router.refresh();
         } catch (error) {
             console.error(error);
-            toast.error("Có lỗi xảy ra khi mint NFT");
+            toast.error('Có lỗi xảy ra khi mint NFT');
         } finally {
             setLoading(false);
         }
     };
 
-    // Lọc danh sách sản phẩm theo tìm kiếm
-    const filteredProducts = products.filter(product =>
+    const filteredProducts = products.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
 
     // Render giao diện chọn sản phẩm để mint
     const renderSelectProduct = () => {
@@ -210,16 +209,18 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
                                         <FormControl>
                                             <input
                                                 type="number"
+                                                step="any"
                                                 {...field}
                                                 className="w-full p-2 border rounded-md"
                                                 defaultValue={selectedProduct.price || ''}
-                                                onChange={(e) => field.onChange(e.target.value)}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
                                             />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
+
                             <FormField
                                 control={form.control}
                                 name="IPFShash"
@@ -323,14 +324,14 @@ export const MintingForm: React.FC<MintingFormProps> = ({ products }) => {
     return (
         <div className="w-full py-4 flex  gap-8">
             {/* Phần danh sách NFT đã mint */}
-            <div className="border-2 border-gray-300 rounded-lg p-4 h-[650px] max-w-2xl mx-auto">
+            <div className="border-2 border-gray-300 rounded-lg p-4 h-[650px] w-[500px] mx-auto">
                 <p className="font-bold mb-4">NFS Minted List</p>
                 {mintedProducts.length > 0 ? (
-                    <div className="grid grid-cols-4 gap-2 overflow-y-auto h-[550px] w-full">
+                    <div className="grid grid-cols-2 gap-3 overflow-y-auto h-[550px] w-full">
                         {mintedProducts.map((product) => (
                             <div
                                 key={product.productId}
-                                className="w-[90px] h-[90px] overflow-hidden rounded-md transition-transform transform hover:scale-105 hover:shadow-lg"
+                                className="w-[200px] h-[180px] overflow-hidden rounded-md transition-transform transform hover:scale-105 hover:shadow-lg"
                             >
                                 <Image
                                     src={product.image ? product.image : '/placeholder.png'}

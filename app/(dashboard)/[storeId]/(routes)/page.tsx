@@ -1,28 +1,27 @@
-import { getGraphRevenue } from "@/actions/get-graph-revenue";
-import { getSalesCount } from "@/actions/get-sales-count";
-import { getStockCount } from "@/actions/get-stock-count";
-import { getTotalRevenue } from "@/actions/get-total-revenue";
 import { Overview } from "@/components/overview";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
-import prismadb from "@/lib/prismadb"
+import { Wallet, CreditCard, Package } from "lucide-react"; // sử dụng icon Wallet thay cho Ethereum
 import { formatter } from "@/lib/utils";
-import { CreditCard, DollarSign, Package } from "lucide-react";
+import { SiEthereum } from "react-icons/si";
 
 interface DashboardPageProps {
   params: { storeId: string }
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = async ({ params }) => {
-  const store = await prismadb.store.findFirst({
-    where: { id: params.storeId }
-  });
-
-  const totalRevenue = await getTotalRevenue(params.storeId);
-  const salesCount = await getSalesCount(params.storeId);
-  const stockCount = await getStockCount(params.storeId);
-  const graphRevenue = await getGraphRevenue(params.storeId);
+  // Dữ liệu giả định
+  const totalRevenue = 89.273683; // Số tiền giả định
+  const salesCount = 128;    // Số đơn hàng giả định
+  const stockCount = 53;     // Số lượng sản phẩm trong kho giả định
+  const graphRevenue = [
+    { name: "Jan", total: 400 },
+    { name: "Feb", total: 800 },
+    { name: "Mar", total: 1600 },
+    { name: "Apr", total: 2000 },
+    { name: "May", total: 2100 },
+  ]; // Dữ liệu giả định cho biểu đồ
 
   return (
     <div className="flex-col">
@@ -35,11 +34,11 @@ const DashboardPage: React.FC<DashboardPageProps> = async ({ params }) => {
               <CardTitle className="text-sm font-medium">
                 Total Revenue
               </CardTitle>
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <Wallet className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {formatter.format(totalRevenue)}
+              <div className="text-2xl font-bold flex items-center gap-x-2">
+                {formatter.format(totalRevenue)}...<SiEthereum className="text-violet-900" size={32} />
               </div>
             </CardContent>
           </Card>
@@ -80,7 +79,7 @@ const DashboardPage: React.FC<DashboardPageProps> = async ({ params }) => {
         </Card>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DashboardPage
+export default DashboardPage;
